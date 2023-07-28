@@ -12,6 +12,7 @@
             canvasCtx = canvasEl.getContext("2d"),
             gapX = 10;
 
+            const mouse = {x:0, y:0}
 
             //field
             const field = {
@@ -36,24 +37,38 @@
             //draw left paddle
             const leftPaddle = {
                 x: gapX,
-                y: 100,
+                y: 0,
                 w: line.w,
                 h: 200,
+
+                _move: function() {
+                    this.y = mouse.y - this.h / 2
+                },
+
                 draw: function() {
                     canvasCtx.fillStyle = "#ffffff";
                     canvasCtx.fillRect(this.x, this.y, this.w, this.h)
+                    this._move();
                 }
+
+                
             };
 
             //dram right paddle
             const rightPaddle = {
                 x: field.w - line.w - gapX,
-                y: 200,
+                y: 0,
                 w: line.w,
                 h: 200,
+
+                _move: function() {
+                    this.y = ball.y
+                },
                 draw: function() {
                     canvasCtx.fillStyle = "#ffffff";
                     canvasCtx.fillRect(this.x, this.y, this.w, this.h);
+
+                    this._move();
                 }
             }
 
@@ -73,13 +88,29 @@
 
             //draw ball
             const ball = {
-                x: 500,
-                y: 300,
+                x: 0,
+                y: 0,
                 r: 20,
                 speed: 7,
+                directionX: 1,
+                directionY: 1,
+                _calcPosition: function() {
+                    if(
+                        (this.y < 0 && this.directionY < 0) ||
+                        (this.y > field.h-this.r && this.directionY > 0)
+                    ) {
+                        this._reverseY();
+                    }
+                },
+                _reverseX: function() {
+                    this.directionX *= -1;
+                },
+                _reverseY: function() {
+                    this.directionY *= -1;
+                },
                 _move: function() {
-                    this.x += 1 * this.speed;
-                    this.y += 1 * this.speed;
+                    this.x += this.directionX * this.speed;
+                    this.y += this.directionY * this.speed;
                 },
                 draw: function(){
                     canvasCtx.fillStyle = "#ffffff";
@@ -87,6 +118,7 @@
                     canvasCtx.arc(this.x, this.y, this.r, 0, 2 * Math.PI, false);
                     canvasCtx.fill();
 
+                    this._calcPosition();
                     this._move();
                 }
 
@@ -108,10 +140,33 @@
 
             };
 
-            setup();
-            draw();
+            window.animateFrame = (function () {
+                return (
+                    window.requestAnimationFrame ||
+                    window.webkitRequestAnimationFrame ||
+                    window.mozRequestAnimationFrame ||
+                    window.oRequestAnimationFrame ||
+                    window.msRequestAnimationFrame ||
+                    function(callback) {
+                        return window.setTimeout(callback, 1000 / 60)
+                    }
+                )
+            })()
 
-            window.setInterval(draw, 1000 / 60)
+            function main() {
+                animateFrame(main)
+                draw()
+            }
+
+
+            setup();
+            main();
+
+            canvasEl.addEventListener("mousemove", function (e) {
+                mouse.x = e.pageX
+                mouse.y = e.pageY
+            })
+
     </script>
 </body>
 </html>
